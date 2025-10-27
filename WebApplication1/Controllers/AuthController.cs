@@ -1,50 +1,53 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using WebApplication1.model;   // Namespace for User model
-using WebApplication1.service; // Namespace for JwtTokenService
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc;  // Make sure UserDTO is defined here or import the correct namespace
+using WebApplication1.service;
 
 namespace WebApplication1.Controllers
 {
-    [Route("api/[controller]")]  // Route attribute sets base URL to api/auth
-    [ApiController]              // Marks this class as an API controller
-    public class AuthController : ControllerBase
+    [Route("api/[controller]")]
+    [ApiController]
+    public class LoginController : ControllerBase
     {
-        private readonly IJwtTokenService _jwtTokenService;
+        private readonly IAuthenticationService _authenticationService;
+        private readonly JWTAuthenticationService _jwtAuthenticationService;
 
-        // Constructor injection of JwtTokenService interface
-        public AuthController(IJwtTokenService jwtTokenService)
+        public LoginController(IAuthenticationService authenticationService, JWTAuthenticationService jwtAuthentication)
         {
-            _jwtTokenService = jwtTokenService;
+            _authenticationService = authenticationService;
+            _jwtAuthenticationService = jwtAuthentication;
         }
 
-        //https://localhost:5059/api/auth/login
-        // Defines POST method accessible via api/auth/login
-        [HttpPost("login")]
-        public IActionResult Login([FromBody] User login)
+        [HttpPost("LoginUser")]
+        public IActionResult LoginUser([FromBody] UserDTO userDTO)
         {
-            // Write login attempt to console
-            Console.WriteLine($"User login attempt - Email: '{login.Email}', Password: '{login.Password}'");
-
-            // Hardcoded demo user for authentication check
-            var demoUser = new User
+            if (string.IsNullOrEmpty(userDTO.Email) || string.IsNullOrEmpty(userDTO.Password))
             {
-                Id = Guid.NewGuid(),          // Assign new GUID
-                Email = "test@gmail.com",     // Hardcoded email
-                Password = "123456"           // Hardcoded password
-            };
-
-            // Compare input user email and password with demoUser
-            if (login.Email?.Trim().ToLower() == demoUser.Email.ToLower() &&
-                login.Password?.Trim() == demoUser.Password)
-            {
-                // Credentials valid, generate JWT token
-                var token = _jwtTokenService.GenerateToken(demoUser);
-
-                // Return success response with token
-                return Ok(new { token, message = "Login successful!" });
+                return BadRequest("Kindly don't give your values either null or empty. Please provide the email and password correctly");
             }
 
-            // Credentials invalid, return 401 Unauthorized with message
-            return Unauthorized(new { message = "Invalid credentials" });
+            // Demo hardcoded user check, replace with real logic for actual authentication
+            if (userDTO.Email == "test@example.com" && userDTO.Password == "123456")
+            {
+                string token = _jwtAuthenticationService.GenerateToken(userDTO.Email);
+                return Ok(new { Token = token });
+            }
+            else
+            {
+                return Unauthorized("Invalid Email and password");
+            }
         }
+
+        [HttpGet("Test")]
+        public IActionResult Test()
+        {
+            return Ok(new { Token = "testing token" });
+        }
+    }
+
+    // Example UserDTO
+    public class UserDTO
+    {
+        public string? Email { get; set; }
+        public string ? Password { get; set; }
     }
 }

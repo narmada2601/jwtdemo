@@ -11,7 +11,7 @@ builder.Services.AddControllers();
 
 // Register your JWT authentication service
 
-builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
+builder.Services.AddSingleton<JWTAuthenticationService>();
 
 // Allow CORS for localhost:4200 Angular app
 builder.Services.AddCors(cors =>
