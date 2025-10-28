@@ -6,42 +6,60 @@ namespace WebApplication1.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class LoginController : ControllerBase
+    //https://localhost:7231/api/Auth/Login
+    public class AuthController : ControllerBase
     {
-        private readonly IAuthenticationService _authenticationService;
+       private readonly IAuthenticationService _authenticationService;
         private readonly JWTAuthenticationService _jwtAuthenticationService;
 
-        public LoginController(IAuthenticationService authenticationService, JWTAuthenticationService jwtAuthentication)
+        public AuthController(IAuthenticationService authenticationService, JWTAuthenticationService jwtAuthentication)
         {
             _authenticationService = authenticationService;
             _jwtAuthenticationService = jwtAuthentication;
         }
 
-        [HttpPost("LoginUser")]
-        public IActionResult LoginUser([FromBody] UserDTO userDTO)
+
+        [HttpPost("Login")]
+        public IActionResult Login([FromBody] UserDTO userDTO)
         {
-            if (string.IsNullOrEmpty(userDTO.Email) || string.IsNullOrEmpty(userDTO.Password))
+            try
             {
-                return BadRequest("Kindly don't give your values either null or empty. Please provide the email and password correctly");
+
+
+                if (userDTO == null)
+                {
+                    return BadRequest(new { message = "Request body cannot be null." });
+                }
+                if (string.IsNullOrEmpty(userDTO.Email))
+                {
+                    return BadRequest(new { message = "Email is required." });
+                }
+                if (string.IsNullOrEmpty(userDTO.Password))
+                {
+                    return BadRequest(new { message = "Password is required." });
+                }
+
+                if (userDTO.Email == "test@gmail.com" && userDTO.Password == "123456")
+                {
+                    string token = _jwtAuthenticationService.GenerateToken(userDTO.Email);
+                    return Ok(new { message = "Login successful", token });
+                }
+                else
+                {
+                    return Unauthorized(new { message = "Invalid email or password." });
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log ex here
+                return StatusCode(500, new { message = "Internal server error: " + ex.Message });
             }
 
-            // Demo hardcoded user check, replace with real logic for actual authentication
-            if (userDTO.Email == "test@example.com" && userDTO.Password == "123456")
-            {
-                string token = _jwtAuthenticationService.GenerateToken(userDTO.Email);
-                return Ok(new { Token = token });
-            }
-            else
-            {
-                return Unauthorized("Invalid Email and password");
-            }
+
+
         }
 
-        [HttpGet("Test")]
-        public IActionResult Test()
-        {
-            return Ok(new { Token = "testing token" });
-        }
+
     }
 
     // Example UserDTO
