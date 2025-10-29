@@ -4,20 +4,28 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+/*The service reads JWT settings (SecretKey, Issuer, Audience) from config.
 
+It creates a token with subject and JTI claims.
+
+Signs the token using HMAC SHA256 with your secret key.
+
+Sets token expiration to 1 hour.
+
+Returns the serialized JWT string for client usage (e.g., in HTTP Authorization header). */
 namespace WebApplication1.service
 {
     public interface IJWTAuthenticationService
     {
         string GenerateToken(string email);
     }
-
+    // Implementation of JWT token generation service
     public class JWTAuthenticationService : IJWTAuthenticationService
     {
         private readonly string _secretKey;
         private readonly string _issuer;
         private readonly string _audience;
-
+        // Constructor reads required JwtSettings keys from configuration
         public JWTAuthenticationService(IConfiguration configuration)
         {
             _secretKey = configuration["JwtSettings:SecretKey"]
@@ -32,7 +40,8 @@ namespace WebApplication1.service
         {
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, email),
+                new Claim(JwtRegisteredClaimNames.Sub, email),//// Subject claim - typically the username/email of the user
+                // JTI claim - a unique ID for the token to prevent replay attacks
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
@@ -46,7 +55,7 @@ namespace WebApplication1.service
                 expires: DateTime.UtcNow.AddHours(1),
                 signingCredentials: creds);
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return new JwtSecurityTokenHandler().WriteToken(token);/// Serialize the token to a compact string format (base64 encoded)
         }
     }
 }

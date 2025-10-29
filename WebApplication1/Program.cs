@@ -29,7 +29,7 @@ var app = builder.Build();
 app.UseCors("AllowLocalhost4200");
 
 app.UseMiddleware<CustomJwtMiddleware>();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();// Map controller routes

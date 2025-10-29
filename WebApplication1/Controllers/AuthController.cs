@@ -1,23 +1,27 @@
 ﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;  // Make sure UserDTO is defined here or import the correct namespace
 using WebApplication1.service;
 
 namespace WebApplication1.Controllers
 {
+    //[Authorize]  // Require authentication for all actions by default
     [Route("api/[controller]")]
     [ApiController]
     //https://localhost:7231/api/Auth/Login
     public class AuthController : ControllerBase
     {
-       private readonly IAuthenticationService _authenticationService;
+        // Dependencies injected via constructor
+        private readonly IAuthenticationService _authenticationService;
         private readonly JWTAuthenticationService _jwtAuthenticationService;
 
+        // Constructor dependency injection for services
         public AuthController(IAuthenticationService authenticationService, JWTAuthenticationService jwtAuthentication)
         {
             _authenticationService = authenticationService;
             _jwtAuthenticationService = jwtAuthentication;
         }
-
+        // POST api/Auth/Login - endpoint for user login
 
         [HttpPost("Login")]
         public IActionResult Login([FromBody] UserDTO userDTO)
@@ -25,7 +29,7 @@ namespace WebApplication1.Controllers
             try
             {
 
-
+                // Validate the request body is not null
                 if (userDTO == null)
                 {
                     return BadRequest(new { message = "Request body cannot be null." });
@@ -62,7 +66,7 @@ namespace WebApplication1.Controllers
 
     }
 
-    // Example UserDTO
+    // Data transfer object representing the login request payload
     public class UserDTO
     {
         public string? Email { get; set; }
